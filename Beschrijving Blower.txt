@@ -1,0 +1,6 @@
+
+
+
+COM_reg
+bit0= request fastled update
+bit1 Full pixel burn
