@@ -3,4 +3,11 @@
 
 COM_reg
 bit0= request fastled update
+
+
+
+C_reg
+bit0 = direction in Burn
 bit1 Full pixel burn
+bit2 flickering
+bit3 direction in flickering
