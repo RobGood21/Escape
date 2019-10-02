@@ -3,6 +3,7 @@
 
 COM_reg
 bit0= request fastled update
+bit1 puzzle solved true
 
 
 
@@ -11,3 +12,4 @@ bit0 = direction in Burn
 bit1 Full pixel burn
 bit2 flickering
 bit3 direction in flickering
+bit4 blow out true
