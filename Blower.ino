@@ -9,9 +9,9 @@
 
 //for Fastled
 #include <FastLED.h>
-#define fastled COM_reg |=(1<<0);
+//#define fastled COM_reg |=(1<<0);
 
-unsigned int timered = 15000; //time a blownout cabdle stays out...15sec
+unsigned int timered = 10000; //time a blownout cabdle stays out...15sec
 
 CRGB kaars[10];
 byte TargetRed[10];
@@ -86,26 +86,26 @@ void slowevents() { //called from loop
 				}
 				else {
 					krs = 5 + i;
-				}					
+				}
 
 				if (bitRead(inputs, i) == false & bitRead(switchstatus[s], i) == false) {
 					Serial.println(krs);
 					blowcount[krs]++;
-				}				
+				}
 				if (blowcount[krs] > 3)blowout(krs); //3 ? voor test ff 10
 			}
 
-		//}
-		//for (byte s = 0; s < 2; s++) {
-			//changed status switch
-		//	if (s == 0) {
-		//		inputs = PIND;
-		//		pins = 8;
-		//	}
-		//	else {
-		//		inputs = PINC;
-		//		pins = 5;
-		//	}
+			//}
+			//for (byte s = 0; s < 2; s++) {
+				//changed status switch
+			//	if (s == 0) {
+			//		inputs = PIND;
+			//		pins = 8;
+			//	}
+			//	else {
+			//		inputs = PINC;
+			//		pins = 5;
+			//	}
 
 			changed = inputs ^ switchstatus[s];
 			if (changed > 0) { //switch changed
@@ -149,14 +149,13 @@ void switched(byte blow) {
 }
 
 void blowout(byte krs) { //called from slowevents
-	//hier ook de overgang tussen 2x5 switches naar 10x kaars maken., krs zou de kaars moeten zijn
 
 	C_reg[krs] |= (1 << 4);
 	C_reg[krs] &= ~(B00000110 << 1); //reset efx
 	//PINB |= (1 << 5);
 	blowcount[krs] = 0;
 	speed[krs] = 0; //stop running proces
-	kaars[krs] = 0x000000;
+	kaars[krs] = 0x200000;
 	outtime[krs] = millis();
 }
 
@@ -173,104 +172,110 @@ void timeout() { //called from slowevents
 
 void burn() {
 	//byte i = 0; //temp
-	countrandom++;
-	if (countrandom == 255)randomSeed(analogRead(0));
+	//countrandom++;
+	//if (countrandom == 255)randomSeed(analogRead(0));
 
-	for (byte i=0; i < 10; i++) {
+	for (byte i = 0; i < 10; i++) {
 
-	if (speed[i] == 0) { //targetwaarde bereikt
-		speed[i] = random(10, 60);
+		if (speed[i] == 0) { //targetwaarde bereikt
+			speed[i] = random(10, 100);
 
+			/**/
 
-		if (bitRead(C_reg[i], 1) == true) { //stop flash
-			C_reg[i] &= ~(1 << 1);
-			kaars[i] = 0xAA3000;
-		}
-
-		//efx
-		if (speed[i] == 5 & bitRead(C_reg[i], 4) == false) C_reg[i] |= (1 << 1); //pixel full, not if blowout is active
-
-		if (speed[i] == 40 & bitRead(C_reg[i], 4) == false) { //random flicker effect, not in blowout
-			C_reg[i] |= (1 << 2);
-			fcount[i] = random(5, 50);
-		}
-
-		if (bitRead(C_reg[i], 2) == true) { //flickering
-
-			speed[i] = speed[i] / 2; //speed up effect
-			C_reg[i] ^= (1 << 3); //toggle direction in flicker
-
-			if (bitRead(C_reg[i], 3) == true) { //up
-				TargetRed[i] = random(200, 255);
-			}
-			else { //doen
-				TargetRed[i] = random(30, 150);
+			if (bitRead(C_reg[i], 1) == true) { //stop flash
+				C_reg[i] &= ~(1 << 1);
+				kaars[i] = 0xAA3000;
 			}
 
-			fcount[i]--; //fcount random set when set bit2 in C_reg
-			if (fcount[i] == 0) {
-				C_reg[i] &= ~(1 << 2); //stop flickering effect				
+			//efx
+			if (speed[i] == 10 & bitRead(C_reg[i], 4) == false) C_reg[i] |= (1 << 1); //pixel full, not if blowout is active
+
+
+			if (speed[i] == 40 & bitRead(C_reg[i], 4) == false) { //random flicker effect, not in blowout (speed 40)
+				C_reg[i] |= (1 << 2);
+				fcount[i] = random(5, 50);
 			}
-		}
-		else { //slow burn
-			TargetRed[i] = random(150, 255);
+
+			if (bitRead(C_reg[i], 2) == true) { //flickering moet zijn 2
+
+				speed[i] = speed[i] / 2; //speed up effect
+				C_reg[i] ^= (1 << 3); //toggle direction in flicker
+
+				if (bitRead(C_reg[i], 3) == true) { //up
+					TargetRed[i] = random(200, 250);
+				}
+				else { //doen
+					TargetRed[i] = random(30, 150);
+				}
+
+				fcount[i]--; //fcount random set when set bit2 in C_reg
+
+
+				if (fcount[i] == 0) {
+					C_reg[i] &= ~(1 << 2); //stop flickering effect				
+				}
+			}
+			else { //slow burn
+				TargetRed[i] = random(150, 200);
+			}
+
+			if (bitRead(C_reg[i], 4) == true) { //blow out
+				TargetRed[i] = random(15, 80);
+				TargetGreen[i] = 4;
+				TargetBlue[i] = 1;
+			}
+			else { //burn		
+				TargetGreen[i] = TargetRed[i] / RG - (random(0, TargetRed[i] / 5 / RG)); //4
+				TargetBlue[i] = TargetGreen[i] / GB - (random(0, TargetGreen[i] / 7 / GB)); //6
+				//if (TargetBlue[i] > 10)TargetBlue[i] = 0;
+			}
+
+			if (TargetRed[i] > kaars[i].r) {
+				C_reg[i] |= (1 << 0);
+				StepRed[i] = (TargetRed[i] - kaars[i].r) / speed[i];
+				StepGreen[i] = (TargetGreen[i] - kaars[i].g) / speed[i];
+				//StepBlue[i] = (TargetBlue[i] - kaars[i].b) / speed[i];
+			}
+			else {
+				C_reg[i] &= ~(1 << 0);
+				StepRed[i] = (kaars[i].r - TargetRed[i]) / speed[i];
+				StepGreen[i] = (kaars[i].g - TargetGreen[i]) / speed[i];
+				//StepBlue[i] = (kaars[i].b - TargetBlue[i]) / speed[i];
+			}
+
+
 		}
 
-		if (bitRead(C_reg[i], 4) == true) { //blow out
-			TargetRed[i] = random(15, 80);
-			TargetGreen[i] = 4;
-			TargetBlue[i] = 1;
-		}
-		else { //burn
-			TargetGreen[i] = TargetRed[i] / RG - (random(0, TargetRed[i] / 5 / RG)); //4
-			TargetBlue[i] = TargetGreen[i] / GB - (random(0, TargetGreen[i] / 7 / GB)); //6
-			if (TargetBlue[i] > 50)TargetBlue[i] = 0;
-		}
-
-		if (TargetRed[i] > kaars[i].r) {
-			C_reg[i] |= (1 << 0);
-			StepRed[i] = (TargetRed[i] - kaars[i].r) / speed[i];
-			StepGreen[i] = (TargetGreen[i] - kaars[i].g) / speed[i];
-			StepBlue[i] = (TargetBlue[i] - kaars[i].b) / speed[i];
+		if (bitRead(C_reg[i], 1) == true) {
+			kaars[i] = 0xFFFFFF;
+			speed[i] = 1;
 		}
 		else {
-			C_reg[i] &= ~(1 << 0);
-			StepRed[i] = (kaars[i].r - TargetRed[i]) / speed[i];
-			StepGreen[i] = (kaars[i].g - TargetGreen[i]) / speed[i];
-			StepBlue[i] = (kaars[i].b - TargetBlue[i]) / speed[i];
+			if (bitRead(C_reg[i], 0) == true) {
+				kaars[i].r = kaars[i].r + StepRed[i];
+				kaars[i].g = kaars[i].g + StepGreen[i];
+				//kaars[i].b = kaars[i].b + StepBlue[i];
+			}
+			else {
+				kaars[i].r = kaars[i].r - StepRed[i];
+				kaars[i].g = kaars[i].g - StepGreen[i];
+				//kaars[i].b = kaars[i].b - StepBlue[i];
+			}
 		}
-	}
+		kaars[i].b = 0; //blue uitgezet geeft rare flikkeringen, als kaarsen klaar zijn hier nog naar kijken. 
+		speed[i]--;
 
-	if (bitRead(C_reg[i], 1) == true) {
-		kaars[i] = 0xFFFFFF;
-		speed[i] = 1;
-	}
-
-
-	else {
-		if (bitRead(C_reg[i], 0) == true) {
-			kaars[i].r = kaars[i].r + StepRed[i];
-			kaars[i].g = kaars[i].g + StepGreen[i];
-			kaars[i].b = kaars[i].b + StepBlue[i];
-		}
-		else {
-			kaars[i].r = kaars[i].r - StepRed[i];
-			kaars[i].g = kaars[i].g - StepGreen[i];
-			kaars[i].b = kaars[i].b - StepBlue[i];
-		}
-	}
-
-	speed[i]--;
 	} //	for (byte i; i < 11; i++) {
-	fastled;
+FastLED.show();	
 }
 
 void loop()
 {
-	if (millis() - tijd > 10) { //every 10 ms
+	if (millis() - tijd > 5) { //every 10 ms
 		slowevents();
 		tijd = millis();
-		if (bitRead(COM_reg, 0) == true)FastLED.show();
+		//if (bitRead(COM_reg, 0) == true)FastLED.show();
 		COM_reg &= ~(1 << 0);
 	}
+	//FastLED.show();
 }
