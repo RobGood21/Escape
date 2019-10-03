@@ -53,7 +53,7 @@ void setup()
 	PORTC = 0xFF; //set port C input with pull up.
 
 	DDRB = 0xFF; //portB as outputs	
-	Serial.println("Hallo");
+	Serial.println("Hallo, dit is um....");
 }
 void slowevents() { //called from loop
 	//switches, switches are low active	
@@ -92,7 +92,7 @@ void slowevents() { //called from loop
 					Serial.println(krs);
 					blowcount[krs]++;
 				}				
-				if (blowcount[krs] > 3)blowout(krs); //3 ? voor test ff 10
+				if (blowcount[krs] > 3 & bitRead(C_reg,4)==false) blowout(krs); //3 ? voor test ff 10
 			}
 
 		//}

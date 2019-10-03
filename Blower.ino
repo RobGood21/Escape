@@ -53,7 +53,7 @@ void setup()
 	PORTC = 0xFF; //set port C input with pull up.
 
 	DDRB = 0xFF; //portB as outputs	
-	Serial.println("Hallo");
+	Serial.println("Hallo, dit is um");
 }
 void slowevents() { //called from loop
 	//switches, switches are low active	
@@ -151,7 +151,7 @@ void switched(byte blow) {
 void blowout(byte krs) { //called from slowevents
 	//hier ook de overgang tussen 2x5 switches naar 10x kaars maken., krs zou de kaars moeten zijn
 
-	C_reg[krs] ^= (1 << 4);
+	C_reg[krs] |= (1 << 4);
 	C_reg[krs] &= ~(B00000110 << 1); //reset efx
 	//PINB |= (1 << 5);
 	blowcount[krs] = 0;
