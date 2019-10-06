@@ -3,6 +3,7 @@
 	Created:	30-9-2019 13:00:20
 	Author:     Rob Antonisse
 	Sketch for Arduino Uno for candle blow puzzle
+	10 candles, use of swiches or 
 
 
 */
@@ -12,7 +13,7 @@
 #include <FastLED.h>
 #define blowtime 5
 #define timered 10000  //time a blownout candle stays out...10sec
-#define reset 60000 //60000
+#define reset 60000 //time puzzle resets when solved
 byte solution[4] = { 1,3,8,10 };
 
 CRGB kaars[10];
@@ -44,15 +45,9 @@ byte speedcount;
 byte switchstatus[2]; //0=port D 1=port C
 byte COM_reg;
 
-//tijdelijk
-//
-//unsigned long periode;
-//byte resultold;
-
-
 void setup()
 {
-	Serial.begin(9600);
+	//Serial.begin(9600);
 
 	DDRD |= (1 << 7);//portD pin 7  as outputs neo kaarsen
 	DDRD |= (1 << 6); //pin6 neo brievenbus
@@ -109,7 +104,6 @@ void switchB() {
 			}
 		}
 	}
-
 	//check switches hold
 	for (byte i = 0; i < 5; i++) {
 		krs = 4 - i;
@@ -148,18 +142,10 @@ void switchC() {
 	}
 
 	//check switches hold
-
-
-
-
 	for (byte i = 0; i < 5; i++) {
 		/*
 		if you make i<6 then krs can become 10 5+5 that will ruin the complete program because alle arrays have 10 positions.0~9
 		*/
-
-
-
-
 		krs = i + 5;
 		if (bitRead(PINC, i) == false & bitRead(switchstatus[1], i) == false) {
 			blowcount[krs]++;
@@ -242,22 +228,22 @@ void brievenbus(byte onoff) {
 
 void timeout() { //called from slowevents
 	byte result = 0; //resultold
+	byte rc = 0; //redcount
 
 	//check for puzzle is solved
 	//solution[4]
-
 	if (bitRead(COM_reg, 1) == false) {
 		for (byte i = 0; i < 4; i++) {
 			if (bitRead(C_reg[solution[i] - 1], 4) == true)result++;
 		}
 
-		//if (result != resultold) {
-			//Serial.print("result:");
-			//Serial.println(result);	}
+		for (byte i = 0; i < 10; i++) {
+			if (bitRead(C_reg[i], 4) == true)rc++;
+		}
 
-		//resultold = result;
 
-		if (result == 4) { //puzzle solved
+		if (result == 4 & rc == 4) { //puzzle solved
+
 			COM_reg |= (1 << 1);
 			brievenbus(1);
 			resettimer = millis();
