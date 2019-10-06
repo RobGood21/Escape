@@ -4,6 +4,7 @@
 COM_reg
 bit0= request fastled update
 bit1 puzzle solved true
+bit2 fade brievenbus
 
 
 
@@ -13,3 +14,7 @@ bit1 Full pixel burn
 bit2 flickering
 bit3 direction in flickering
 bit4 blow out true
+bit5 dividing flicker effx
+
+
+bit7 temp debug

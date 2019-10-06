@@ -8,12 +8,16 @@
 */
 
 //for Fastled
-#include <FastLED.h>
-//#define fastled COM_reg |=(1<<0);
 
-unsigned int timered = 10000; //time a blownout cabdle stays out...15sec
+#include <FastLED.h>
+#define blowtime 5
+#define timered 10000  //time a blownout candle stays out...10sec
+#define reset 60000 //60000
+byte solution[4] = { 1,3,8,10 };
 
 CRGB kaars[10];
+CRGB bus[8];
+
 byte TargetRed[10];
 byte StepRed[10];
 byte TargetGreen[10];
@@ -25,10 +29,12 @@ byte C_reg[10];
 byte fcount[10]; //counter of flickering effect, auto stop
 byte blowcount[10]; //time candle is blown
 
+unsigned long tijd;
 unsigned long outtime[10];
+unsigned long resettimer;
 
-float RG = 3.2; //relation between red and green
-float GB = 6.5; //relation between green and blue
+float RG = 3; //relation between red and green
+float GB = 5; //relation between green and blue
 
 
 byte count[3];
@@ -38,24 +44,27 @@ byte speedcount;
 byte switchstatus[2]; //0=port D 1=port C
 byte COM_reg;
 
-
 //tijdelijk
-unsigned long tijd;
-unsigned long periode;
+//
+//unsigned long periode;
+//byte resultold;
+
 
 void setup()
 {
 	Serial.begin(9600);
-	FastLED.addLeds<NEOPIXEL, 8>(kaars, 10);
-	DDRD = 0x0;//portD as inputs
-	PORTD = 0xFF; //pullups on portD
-	DDRC = 0x0;
-	PORTC = 0xFF; //set port C input with pull up.
 
-	DDRB = 0xFF; //portB as outputs	
-	Serial.println("Hallo, dit is um");
+	DDRD |= (1 << 7);//portD pin 7  as outputs neo kaarsen
+	DDRD |= (1 << 6); //pin6 neo brievenbus
+	FastLED.addLeds<NEOPIXEL, 7>(kaars, 10);
+	FastLED.addLeds<NEOPIXEL, 6>(bus, 8);
+
+	PORTC = 0xFF; //set port C input with pull up.
+	DDRB = 0x00;
+	PORTB = 0xFF; //portB pull ups
+	//Serial.println("Hallo, dit is um");
 }
-void slowevents() { //called from loop
+void slowevents() {
 	//switches, switches are low active	
 	byte changed;
 	byte krs;
@@ -66,105 +75,210 @@ void slowevents() { //called from loop
 	switchcount++;
 	if (switchcount == 10) { //10 speed of reading the switches
 		switchcount = 0;
-		//pressed switch
-		//opletten i=hier de switch blowcount= aan de kaars
 
-		if (bitRead(COM_reg, 1) == false) timeout(); //only if puzzle is not solved		
+		timeout(); //time red candle, check puzzle solved	
+		if (bitRead(COM_reg, 3) == true)brievenbus(3);
 
-		for (byte s = 0; s < 2; s++) {
-			if (s == 0) {
-				inputs = PIND;
-				pins = 8;
-			}
-			else {
-				inputs = PINC;
-				pins = 5;
-			}
-			for (byte i = 0; i < pins; i++) {
-				if (s == 0) {
-					krs = 7 - i;
+		switchB();
+		switchC();
+	}
+}
+
+void switchB() {
+	//reads portB
+	byte changed;
+	byte krs;
+	//check changed switches
+	changed = PINB ^ switchstatus[0];
+	if (changed > 0) { //switch changed
+		for (byte i = 0; i < 5; i++) { //check all switch states
+			krs = 4 - i;
+			if (bitRead(changed, i) == true) {
+
+				if (bitRead(PINB, i) == true) { //switch released
+					switchstatus[0] |= (1 << i);
+					//blowcount[krs] = 0;
+					//Serial.println(switchstatus[0]);
 				}
-				else {
-					krs = 5 + i;
-				}
-
-				if (bitRead(inputs, i) == false & bitRead(switchstatus[s], i) == false) {
-					Serial.println(krs);
-					blowcount[krs]++;
-				}
-				if (blowcount[krs] > 3)blowout(krs); //3 ? voor test ff 10
-			}
-
-			//}
-			//for (byte s = 0; s < 2; s++) {
-				//changed status switch
-			//	if (s == 0) {
-			//		inputs = PIND;
-			//		pins = 8;
-			//	}
-			//	else {
-			//		inputs = PINC;
-			//		pins = 5;
-			//	}
-
-			changed = inputs ^ switchstatus[s];
-			if (changed > 0) { //switch changed
-				//
-				for (byte i = 0; i < pins; i++) { //check all switch states
-					if (s == 0) {
-						krs = 7 - i;
-					}
-					else {
-						krs = 5 + i;
-					}
-
-					if (bitRead(changed, i) == true) {
-						if (bitRead(inputs, i) == true) { //switch released
-							switchstatus[s] |= (1 << i);
-							//blowcount[krs] = 0;
-
-						}
-						else { //switch pushed
-							switchstatus[s] &= ~(1 << i);
-							switched(krs); //button pushed
-							blowcount[krs] = 0; //dit naar switched...??
-						}
-					}
+				else { //switch pushed
+					switchstatus[0] &= ~(1 << i);
+					//test(krs);
+					switched(krs); //button pushed
+					blowcount[krs] = 0;
 				}
 			}
 		}
 	}
+
+	//check switches hold
+	for (byte i = 0; i < 5; i++) {
+		krs = 4 - i;
+		if (bitRead(PINB, i) == false & bitRead(switchstatus[0], i) == false) {
+			blowcount[krs]++;
+		}
+		if (blowcount[krs] > blowtime)blowout(krs); //3 ? voor test ff 10
+	}
+}
+
+void switchC() {
+	//reads portC
+	byte changed;
+	byte krs;
+
+	//check changed switches
+	changed = PINC ^ switchstatus[1];
+	if (changed > 0) { //switch changed
+		for (byte i = 0; i < 5; i++) { //check all switch states
+			krs = i + 5;
+			if (bitRead(changed, i) == true) {
+				if (bitRead(PINC, i) == true) { //switch released
+					switchstatus[1] |= (1 << i);
+
+					//Serial.println(switchstatus[1]);
+					//blowcount[krs] = 0;
+				}
+				else { //switch pushed
+					switchstatus[1] &= ~(1 << i);
+					//test(krs);
+					switched(krs); //button pushed
+					blowcount[krs] = 0;
+				}
+			}
+		}
+	}
+
+	//check switches hold
+
+
+
+
+	for (byte i = 0; i < 5; i++) {
+		/*
+		if you make i<6 then krs can become 10 5+5 that will ruin the complete program because alle arrays have 10 positions.0~9
+		*/
+
+
+
+
+		krs = i + 5;
+		if (bitRead(PINC, i) == false & bitRead(switchstatus[1], i) == false) {
+			blowcount[krs]++;
+		}
+		if (blowcount[krs] > blowtime)blowout(krs); //3 ? voor test ff 10
+	}
+}
+
+void test(byte k) {
+
+	Serial.println(k);
+	//test switches onoff candles 
+	C_reg[k] ^= (1 << 6);
+
+	if (bitRead(C_reg[k], 6) == true) {
+		kaars[k] = 0xAAAAAA;
+	}
+	else {
+		kaars[k] = 0x000000;
+	}
+	//Serial.println(kaars[k]);
+		//FastLED.show();
 }
 
 void switched(byte blow) {
+	//Serial.println(blow);	
+
+	C_reg[blow] |= (1 << 2); //flickering onoff
+
+	//Serial.println("");
+	//Serial.print("start in switched:");
 	//Serial.println(blow);
-
-	//kaars[blow] = 0xFFFFFF;
-
-
-	C_reg[blow] ^= (1 << 2); //flickering onoff
 	fcount[blow] = random(30, 60);
-
-	//fastled
 }
 
 void blowout(byte krs) { //called from slowevents
 
 	C_reg[krs] |= (1 << 4);
 	C_reg[krs] &= ~(B00000110 << 1); //reset efx
+
 	//PINB |= (1 << 5);
 	blowcount[krs] = 0;
 	speed[krs] = 0; //stop running proces
 	kaars[krs] = 0x200000;
 	outtime[krs] = millis();
 }
+void brievenbus(byte onoff) {
+
+	switch (onoff) {
+	case 0:
+		COM_reg &= ~(1 << 2);
+		COM_reg |= (1 << 3);
+		//fill_solid(bus, 8, CRGB::Black);
+		break;
+	case 1:
+		//fill_solid(bus, 8, CRGB::NavajoWhite);
+		COM_reg |= (1 << 2);
+		COM_reg |= (1 << 3);
+		break;
+	case 3:
+		for (byte bb = 0; bb < 8; bb++) {
+			if (bitRead(COM_reg, 2) == true) {
+				bus[bb].r++;
+				if (bus[bb].r > 200)COM_reg &= ~(1 << 3);
+
+				bus[bb].g++;
+				bus[bb].b++;				
+			}
+			else {
+				bus[bb].r--;
+				if (bus[bb].r == 0)COM_reg &= ~(1 << 3);
+			if(bus[bb].g >0)bus[bb].g--;
+			if(bus[bb].b >0)bus[bb].b--;
+			}
+		}
+		break;
+	}
+}
+
 
 void timeout() { //called from slowevents
-	//checks time candle is been blown out
-	for (byte k; k < 10; k++) {
-		if (bitRead(C_reg[k], 4) == true) {
-			if (millis() - outtime[k] > timered) {
-				C_reg[k] &= ~(1 << 4); //rest candle
+	byte result = 0; //resultold
+
+	//check for puzzle is solved
+	//solution[4]
+
+	if (bitRead(COM_reg, 1) == false) {
+		for (byte i = 0; i < 4; i++) {
+			if (bitRead(C_reg[solution[i] - 1], 4) == true)result++;
+		}
+
+		//if (result != resultold) {
+			//Serial.print("result:");
+			//Serial.println(result);	}
+
+		//resultold = result;
+
+		if (result == 4) { //puzzle solved
+			COM_reg |= (1 << 1);
+			brievenbus(1);
+			resettimer = millis();
+		}
+
+		//checks time candle is been blown out	   	 
+		for (byte k; k < 10; k++) {
+			if (bitRead(C_reg[k], 4) == true) {
+				if (millis() - outtime[k] > timered) {
+					C_reg[k] &= ~(1 << 4); //rest candle
+				}
+			}
+		}
+
+	}
+	else { //check for reset puzzle
+		if (millis() - resettimer > reset) {
+			COM_reg &= ~(1 << 1); //reset puzzle
+			for (byte i = 0; i < 10; i++) {
+				C_reg[i] = 0;
+				brievenbus(0);
 			}
 		}
 	}
@@ -175,11 +289,9 @@ void burn() {
 	//countrandom++;
 	//if (countrandom == 255)randomSeed(analogRead(0));
 
-	for (byte i = 0; i < 10; i++) {
-
+	for (byte i = 9; i < 255; i--) {
 		if (speed[i] == 0) { //targetwaarde bereikt
-			speed[i] = random(10, 100);
-
+			speed[i] = random(20, 100);
 			/**/
 
 			if (bitRead(C_reg[i], 1) == true) { //stop flash
@@ -188,94 +300,105 @@ void burn() {
 			}
 
 			//efx
-			if (speed[i] == 10 & bitRead(C_reg[i], 4) == false) C_reg[i] |= (1 << 1); //pixel full, not if blowout is active
-
+			if (speed[i] == 22 & bitRead(C_reg[i], 4) == false) C_reg[i] |= (1 << 1); //pixel full, not if blowout is active
 
 			if (speed[i] == 40 & bitRead(C_reg[i], 4) == false) { //random flicker effect, not in blowout (speed 40)
-				C_reg[i] |= (1 << 2);
-				fcount[i] = random(5, 50);
+				C_reg[i] ^= (1 << 5);
+
+				if (bitRead(C_reg[i], 5) == true) {
+					//Serial.println("");
+					//Serial.print("start in burn:");
+					//Serial.println(i);
+
+					C_reg[i] |= (1 << 2);
+					fcount[i] = random(5, 50);
+				}
 			}
 
-			if (bitRead(C_reg[i], 2) == true) { //flickering moet zijn 2
 
-				speed[i] = speed[i] / 2; //speed up effect
+			if (bitRead(C_reg[i], 2) == true) { //flickering moet zijn 2			
+				speed[i] = speed[i] / 3; //speed up effect /2
 				C_reg[i] ^= (1 << 3); //toggle direction in flicker
+				//Serial.print("*");
+				//Serial.print(i);
 
 				if (bitRead(C_reg[i], 3) == true) { //up
-					TargetRed[i] = random(200, 250);
+					TargetRed[i] = random(160, 250);
 				}
-				else { //doen
-					TargetRed[i] = random(30, 150);
+				else { //down
+					TargetRed[i] = random(60, 110);
 				}
 
 				fcount[i]--; //fcount random set when set bit2 in C_reg
-
-
 				if (fcount[i] == 0) {
 					C_reg[i] &= ~(1 << 2); //stop flickering effect				
+
+					//Serial.println("");
+					//Serial.print("Stop:");
+					//Serial.println(i);
 				}
 			}
-			else { //slow burn
-				TargetRed[i] = random(150, 200);
-			}
 
+			else { //slow burn
+				TargetRed[i] = random(130, 250);
+			}
+			//***********************
 			if (bitRead(C_reg[i], 4) == true) { //blow out
 				TargetRed[i] = random(15, 80);
 				TargetGreen[i] = 4;
 				TargetBlue[i] = 1;
 			}
 			else { //burn		
-				TargetGreen[i] = TargetRed[i] / RG - (random(0, TargetRed[i] / 5 / RG)); //4
-				TargetBlue[i] = TargetGreen[i] / GB - (random(0, TargetGreen[i] / 7 / GB)); //6
-				//if (TargetBlue[i] > 10)TargetBlue[i] = 0;
+				TargetGreen[i] = TargetRed[i] / RG; //-(random(0, TargetRed[i] / 5 / RG)); //4
+				TargetBlue[i] = TargetGreen[i] / GB; //- (random(0, TargetGreen[i] / 7 / GB)); //6
+				if (TargetBlue[i] > 10)TargetBlue[i] = 0;
 			}
 
-			if (TargetRed[i] > kaars[i].r) {
+			if (TargetRed[i] >= kaars[i].r) {
 				C_reg[i] |= (1 << 0);
 				StepRed[i] = (TargetRed[i] - kaars[i].r) / speed[i];
 				StepGreen[i] = (TargetGreen[i] - kaars[i].g) / speed[i];
-				//StepBlue[i] = (TargetBlue[i] - kaars[i].b) / speed[i];
+
+				StepBlue[i] = (TargetBlue[i] - kaars[i].b) / speed[i];
 			}
 			else {
 				C_reg[i] &= ~(1 << 0);
 				StepRed[i] = (kaars[i].r - TargetRed[i]) / speed[i];
 				StepGreen[i] = (kaars[i].g - TargetGreen[i]) / speed[i];
-				//StepBlue[i] = (kaars[i].b - TargetBlue[i]) / speed[i];
+				StepBlue[i] = (kaars[i].b - TargetBlue[i]) / speed[i];
 			}
-
 
 		}
 
-		if (bitRead(C_reg[i], 1) == true) {
+		if (bitRead(C_reg[i], 1) == true & speed[i] > 5) {
 			kaars[i] = 0xFFFFFF;
-			speed[i] = 1;
+			speed[i] = 5;
 		}
 		else {
 			if (bitRead(C_reg[i], 0) == true) {
 				kaars[i].r = kaars[i].r + StepRed[i];
 				kaars[i].g = kaars[i].g + StepGreen[i];
-				//kaars[i].b = kaars[i].b + StepBlue[i];
+				kaars[i].b = kaars[i].b + StepBlue[i];
 			}
 			else {
 				kaars[i].r = kaars[i].r - StepRed[i];
 				kaars[i].g = kaars[i].g - StepGreen[i];
-				//kaars[i].b = kaars[i].b - StepBlue[i];
+				kaars[i].b = kaars[i].b - StepBlue[i];
 			}
 		}
-		kaars[i].b = 0; //blue uitgezet geeft rare flikkeringen, als kaarsen klaar zijn hier nog naar kijken. 
 		speed[i]--;
 
 	} //	for (byte i; i < 11; i++) {
-FastLED.show();	
+	FastLED.show();
 }
 
 void loop()
 {
-	if (millis() - tijd > 5) { //every 10 ms
+	if (millis() - tijd > 5) { //every 5 ms
 		slowevents();
 		tijd = millis();
 		//if (bitRead(COM_reg, 0) == true)FastLED.show();
 		COM_reg &= ~(1 << 0);
+		//FastLED.show();
 	}
-	//FastLED.show();
 }
