@@ -3,7 +3,7 @@
 	Created:	30-9-2019 13:00:20
 	Author:     Rob Antonisse
 	Sketch for Arduino Uno for candle blow puzzle
-	10 candles, use of swiches or 
+	10 candles, use of swiches or
 
 
 */
@@ -11,13 +11,16 @@
 //for Fastled
 
 #include <FastLED.h>
-#define blowtime 5
+#define blowtime 1
 #define timered 10000  //time a blownout candle stays out...10sec
-#define reset 60000 //time puzzle resets when solved
+#define reset 60000 //time puzzle resets when solved 60000
 byte solution[4] = { 1,3,8,10 };
 
+float RG = 3; //relation between red and green
+float GB = 5; //relation between green and blue
+
 CRGB kaars[10];
-CRGB bus[8];
+CRGB bus[5];
 
 byte TargetRed[10];
 byte StepRed[10];
@@ -30,13 +33,11 @@ byte C_reg[10];
 byte fcount[10]; //counter of flickering effect, auto stop
 byte blowcount[10]; //time candle is blown
 
+
+
 unsigned long tijd;
 unsigned long outtime[10];
 unsigned long resettimer;
-
-float RG = 3; //relation between red and green
-float GB = 5; //relation between green and blue
-
 
 byte count[3];
 byte countrandom;
@@ -51,13 +52,20 @@ void setup()
 
 	DDRD |= (1 << 7);//portD pin 7  as outputs neo kaarsen
 	DDRD |= (1 << 6); //pin6 neo brievenbus
+
+
 	FastLED.addLeds<NEOPIXEL, 7>(kaars, 10);
-	FastLED.addLeds<NEOPIXEL, 6>(bus, 8);
+	FastLED.addLeds<NEOPIXEL, 6>(bus, 5);
 
 	PORTC = 0xFF; //set port C input with pull up.
 	DDRB = 0x00;
 	PORTB = 0xFF; //portB pull ups
-	//Serial.println("Hallo, dit is um");
+
+	DDRD &= ~(1 << 5);
+	PORTD |= (1 << 5); //PIN 5 input puzzle reset
+
+
+				  //Serial.println("Hallo, dit is um");
 }
 void slowevents() {
 	//switches, switches are low active	
@@ -71,13 +79,37 @@ void slowevents() {
 	if (switchcount == 10) { //10 speed of reading the switches
 		switchcount = 0;
 
+
+
 		timeout(); //time red candle, check puzzle solved	
 		if (bitRead(COM_reg, 3) == true)brievenbus(3);
-
 		switchB();
 		switchC();
+		switchR();
+
+
 	}
 }
+void switchR() {
+
+	byte pp;
+	pp = bitRead(PIND, 5);
+	if (pp != bitRead(COM_reg, 4)) { //status switch changed
+		if (pp == true) { //switch released
+			COM_reg |= (1 << 4);
+		}
+		else { //switch pressed	
+			COM_reg &= ~(1 << 4);
+			COM_reg ^= (1 << 1); //toggle puzzle soved status			
+
+			if (bitRead(COM_reg, 1) == true) {
+				resettimer = millis();
+				brievenbus(1);
+			}
+		}
+	}
+}
+
 
 void switchB() {
 	//reads portB
@@ -198,27 +230,27 @@ void brievenbus(byte onoff) {
 	case 0:
 		COM_reg &= ~(1 << 2);
 		COM_reg |= (1 << 3);
-		//fill_solid(bus, 8, CRGB::Black);
+		//fill_solid(bus, 5, CRGB::Black);
 		break;
 	case 1:
-		//fill_solid(bus, 8, CRGB::NavajoWhite);
+		//fill_solid(bus, 5, CRGB::NavajoWhite);
 		COM_reg |= (1 << 2);
 		COM_reg |= (1 << 3);
 		break;
 	case 3:
-		for (byte bb = 0; bb < 8; bb++) {
+		for (byte bb = 0; bb < 5; bb++) {
 			if (bitRead(COM_reg, 2) == true) {
 				bus[bb].r++;
 				if (bus[bb].r > 200)COM_reg &= ~(1 << 3);
 
 				bus[bb].g++;
-				bus[bb].b++;				
+				bus[bb].b++;
 			}
 			else {
 				bus[bb].r--;
 				if (bus[bb].r == 0)COM_reg &= ~(1 << 3);
-			if(bus[bb].g >0)bus[bb].g--;
-			if(bus[bb].b >0)bus[bb].b--;
+				if (bus[bb].g > 0)bus[bb].g--;
+				if (bus[bb].b > 0)bus[bb].b--;
 			}
 		}
 		break;
@@ -243,7 +275,6 @@ void timeout() { //called from slowevents
 
 
 		if (result == 4 & rc == 4) { //puzzle solved
-
 			COM_reg |= (1 << 1);
 			brievenbus(1);
 			resettimer = millis();
@@ -268,6 +299,9 @@ void timeout() { //called from slowevents
 			}
 		}
 	}
+}
+void solved() {
+
 }
 
 void burn() {

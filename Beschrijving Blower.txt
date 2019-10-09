@@ -5,6 +5,8 @@ COM_reg
 bit0= request fastled update
 bit1 puzzle solved true
 bit2 fade brievenbus
+bit 3 ???
+bit4 Switch memory rest puzzle button
 
 
 
