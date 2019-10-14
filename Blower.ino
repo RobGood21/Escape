@@ -14,7 +14,7 @@
 #define blowtime 1
 #define timered 10000  //time a blownout candle stays out...10sec
 #define reset 60000 //time puzzle resets when solved 60000
-byte solution[4] = { 1,3,8,10 };
+byte solution[4] ={ 1,3,8,10 };
 
 float RG = 3; //relation between red and green
 float GB = 5; //relation between green and blue
@@ -48,6 +48,7 @@ byte COM_reg;
 
 void setup()
 {
+
 	//Serial.begin(9600);
 
 	DDRD |= (1 << 7);//portD pin 7  as outputs neo kaarsen
@@ -64,8 +65,10 @@ void setup()
 	DDRD &= ~(1 << 5);
 	PORTD |= (1 << 5); //PIN 5 input puzzle reset
 
-
-				  //Serial.println("Hallo, dit is um");
+	//mirror solution
+	for (byte i = 0; i < 4; i++) {
+		solution[i] = 11 - solution[i];
+	}
 }
 void slowevents() {
 	//switches, switches are low active	
@@ -100,12 +103,9 @@ void switchR() {
 		}
 		else { //switch pressed	
 			COM_reg &= ~(1 << 4);
-			COM_reg ^= (1 << 1); //toggle puzzle soved status			
-
-			if (bitRead(COM_reg, 1) == true) {
-				resettimer = millis();
-				brievenbus(1);
-			}
+			COM_reg |= (1 << 1); //set puzzle soved status	
+			resettimer = millis();
+			brievenbus(1);
 		}
 	}
 }
@@ -139,6 +139,7 @@ void switchB() {
 	//check switches hold
 	for (byte i = 0; i < 5; i++) {
 		krs = 4 - i;
+		//krs = i;
 		if (bitRead(PINB, i) == false & bitRead(switchstatus[0], i) == false) {
 			blowcount[krs]++;
 		}
@@ -300,9 +301,9 @@ void timeout() { //called from slowevents
 		}
 	}
 }
-void solved() {
+//void solved() {
 
-}
+//}
 
 void burn() {
 	//byte i = 0; //temp
