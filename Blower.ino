@@ -81,20 +81,14 @@ void slowevents() {
 	switchcount++;
 	if (switchcount == 10) { //10 speed of reading the switches
 		switchcount = 0;
-
-
-
 		timeout(); //time red candle, check puzzle solved	
 		if (bitRead(COM_reg, 3) == true)brievenbus(3);
 		switchB();
 		switchC();
 		switchR();
-
-
 	}
 }
 void switchR() {
-
 	byte pp;
 	pp = bitRead(PIND, 5);
 	if (pp != bitRead(COM_reg, 4)) { //status switch changed
@@ -109,8 +103,6 @@ void switchR() {
 		}
 	}
 }
-
-
 void switchB() {
 	//reads portB
 	byte changed;
@@ -146,7 +138,6 @@ void switchB() {
 		if (blowcount[krs] > blowtime)blowout(krs); //3 ? voor test ff 10
 	}
 }
-
 void switchC() {
 	//reads portC
 	byte changed;
@@ -186,7 +177,6 @@ void switchC() {
 		if (blowcount[krs] > blowtime)blowout(krs); //3 ? voor test ff 10
 	}
 }
-
 void test(byte k) {
 
 	Serial.println(k);
@@ -361,7 +351,7 @@ void burn() {
 			}
 
 			else { //slow burn
-				TargetRed[i] = random(130, 250);
+				TargetRed[i] = random(160, 250);
 			}
 			//***********************
 			if (bitRead(C_reg[i], 4) == true) { //blow out
@@ -370,8 +360,8 @@ void burn() {
 				TargetBlue[i] = 1;
 			}
 			else { //burn		
-				TargetGreen[i] = TargetRed[i] / RG; //-(random(0, TargetRed[i] / 5 / RG)); //4
-				TargetBlue[i] = TargetGreen[i] / GB; //- (random(0, TargetGreen[i] / 7 / GB)); //6
+				TargetGreen[i] = (TargetRed[i] / RG) -5;
+				TargetBlue[i] = (TargetGreen[i] / GB)-10;
 				if (TargetBlue[i] > 10)TargetBlue[i] = 0;
 			}
 
