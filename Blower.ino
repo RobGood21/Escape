@@ -5,7 +5,7 @@
 	Sketch for Arduino Uno for candle blow puzzle
 	10 candles, use of swiches or
 
-
+	Version 1-03 full pixel effect cancelled
 */
 
 //for Fastled
@@ -311,7 +311,8 @@ void burn() {
 			}
 
 			//efx
-			if (speed[i] == 22 & bitRead(C_reg[i], 4) == false) C_reg[i] |= (1 << 1); //pixel full, not if blowout is active
+			//cancel next line to cancel the full pixel effect.
+			//if (speed[i] == 22 & bitRead(C_reg[i], 4) == false) C_reg[i] |= (1 << 1); //pixel full, not if blowout is active
 
 			if (speed[i] == 40 & bitRead(C_reg[i], 4) == false) { //random flicker effect, not in blowout (speed 40)
 				C_reg[i] ^= (1 << 5);
