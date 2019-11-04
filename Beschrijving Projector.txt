@@ -1,13 +1,35 @@
 
 
+
+PIN A0, DDRC 0, input switch 1
+PIN A1, DDRC 1, input switch 2
+PIN A2, DDRC 2, input spoel 1
+PIN A3, DDRC 3, input spoel 2
+
+PIN6, DDRD 6, output naar vibratie motor 
 PIN7, DDRD 7, output to leds in lens
+PIN8, DDRB 0, out led switch 1
+PIN9, DRDB 1, out led switch 2
+PIN10, DRDB 2, out relais movie 1
+PIN11, DRDB 3, out relais movie 2
 
 COM_reg
-bit0
-bit1
-bit2
-bit3
+bit0 timer film puls
+bit1 Film puls aan(true) of uit 
+bit2 Lens aan(true)
+bit3 Programmode true
 bit4
 bit5
 bit6
 bit7
+
+GPIOR0  register voor snelle zaken
+bit0 led in lens brand, true
+bit1 spoel1 geplaatst, ledring1 brand
+bit2 spoel2 geplaatst, ledring2 brand
+bit3 request filmafspelen gedaan, true 
+bit4 request animatie, true
+
+MEM_reg  eeprom #100
+bit0 animation start on true(default) 
+bit1 animation play on true (default) 
