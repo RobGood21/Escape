@@ -6,7 +6,7 @@
 */
 //defines sterktes ledlicht in lens
 #define Lil 350; //sterkte ledlicht in lens
-
+#define BeepOff PORTD |= (1 << 6);
 
 //declarations
 
@@ -40,11 +40,16 @@ void setup() {
 	DDRD |= (1 << 7); //PIN 7 output
 	pulsduur = 0; //10% duty cycle
 	DDRD |= (1 << 6);//pin 6 output vibration
-	PORTD |= (1 << 6); //beep off
+
+	//PORTD |= (1 << 6); //beep off
+	BeepOff;
+
 	//COM_reg |= (1 << 1); //film draaien
 	//DDRC = 0x00;
 	PORTC = 0xFF; //pullups to portC
 	DDRB = 0xFF; //port B as outputs
+	PORTB |= (1 << 2);
+	PORTB |= (1 << 3);
 	MEM_reg = EEPROM.read(100);
 }
 void lens() {
@@ -106,6 +111,7 @@ void SW_exe() {
 	byte changed;
 	byte port;
 	if (millis() - swtijd > 100) { //very slow switches counters contact denderen
+		BeepOff; //switch off beep to prevent hanging in active state
 		swtijd = millis();
 		port = PINC;
 		changed = port ^ SW_status;
@@ -125,7 +131,7 @@ void SW_exe() {
 		SW_status = port;
 
 		if (bitRead(GPIOR0, 3) == true & millis() - relaistijd > 1000) {
-			PORTB &= ~(1 << movie); //reset relais
+			PORTB |= (1 << movie); //reset relais
 			GPIOR0 &= ~(1 << 3); //free playbuttons
 		}
 
@@ -258,7 +264,7 @@ void startmovie() {
 
 	relaistijd = millis();
 	GPIOR0 |= (1 << 3); //movie plays	
-	PORTB |= (1 << movie);
+	PORTB &= ~(1 << movie);
 	
 
 }
@@ -273,7 +279,8 @@ void sound() {
 		}
 		if (millis() - soundduur > 30) {
 			soundmode = 0;
-			PORTD |= (1 << 6); //beep off
+			//PORTD |= (1 << 6); //beep off
+			BeepOff;	
 		}
 		break;
 
@@ -284,7 +291,8 @@ void sound() {
 		}
 		if (millis() - soundduur > 30) {
 			soundmode = 0;
-			PORTD |= (1 << 6); //beep off
+			//PORTD |= (1 << 6); //beep off
+			BeepOff;
 		}
 		break;
 	case 3:
@@ -294,20 +302,18 @@ void sound() {
 				soundtone++;
 				soundcount = 0;
 			}
-
-
 			soundfreq = micros();
 			PIND |= (1 << 6);
 		}
 		if (millis() - soundduur > 300) {
 			soundmode = 0;
-			PORTD |= (1 << 6); //beep off
+			//PORTD |= (1 << 6); //beep off
+			BeepOff;
 		}
 		break;
 
 	case 4:
 		if (micros() - soundfreq > soundtone) {
-
 			soundcount++;
 			if (soundcount == 5) {
 				soundtone--;
@@ -319,10 +325,10 @@ void sound() {
 		}
 		if (millis() - soundduur > 300) {
 			soundmode = 0;
-			PORTD |= (1 << 6); //beep off
+			//PORTD |= (1 << 6); //beep off
+			BeepOff;
 		}
 		break;
-
 	}
 }
 

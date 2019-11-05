@@ -10,8 +10,8 @@ PIN6, DDRD 6, output naar vibratie motor
 PIN7, DDRD 7, output to leds in lens
 PIN8, DDRB 0, out led switch 1
 PIN9, DRDB 1, out led switch 2
-PIN10, DRDB 2, out relais movie 1
-PIN11, DRDB 3, out relais movie 2
+PIN10, DRDB 2, out relais movie 1, true = off
+PIN11, DRDB 3, out relais movie 2, true = off
 
 COM_reg
 bit0 timer film puls
