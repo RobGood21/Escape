@@ -45,8 +45,9 @@ void setup() {
 	BeepOff;
 
 	//COM_reg |= (1 << 1); //film draaien
-	//DDRC = 0x00;
+	DDRC = 0x00;
 	PORTC = 0xFF; //pullups to portC
+
 	DDRB = 0xFF; //port B as outputs
 	PORTB |= (1 << 2);
 	PORTB |= (1 << 3);
