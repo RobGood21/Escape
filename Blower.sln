@@ -18,6 +18,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Potts", "Potts\Potts.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RFID-RC522", "RFID-RC522\RFID-RC522.vcxproj", "{3655B8B3-EA31-4130-8D64-99D05ED8761B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DumpInfo", "..\libraries\rfid-master\examples\DumpInfo\DumpInfo.vcxproj", "{11DE1DB7-69AB-41F5-AC07-05A6B9B072D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -40,6 +42,10 @@ Global
 		{3655B8B3-EA31-4130-8D64-99D05ED8761B}.Debug|x86.Build.0 = Debug|Win32
 		{3655B8B3-EA31-4130-8D64-99D05ED8761B}.Release|x86.ActiveCfg = Release|Win32
 		{3655B8B3-EA31-4130-8D64-99D05ED8761B}.Release|x86.Build.0 = Release|Win32
+		{11DE1DB7-69AB-41F5-AC07-05A6B9B072D0}.Debug|x86.ActiveCfg = Debug|Win32
+		{11DE1DB7-69AB-41F5-AC07-05A6B9B072D0}.Debug|x86.Build.0 = Debug|Win32
+		{11DE1DB7-69AB-41F5-AC07-05A6B9B072D0}.Release|x86.ActiveCfg = Release|Win32
+		{11DE1DB7-69AB-41F5-AC07-05A6B9B072D0}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

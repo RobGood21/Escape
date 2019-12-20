@@ -17,4 +17,9 @@
   <ItemGroup>
     <None Include="RFID-RC522.ino" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="__vm\.RFID-RC522.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
