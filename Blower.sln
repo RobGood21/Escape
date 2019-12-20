@@ -9,11 +9,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Beschrijving Blower.txt = Beschrijving Blower.txt
 		Beschrijving Projector.txt = Beschrijving Projector.txt
+		Beschrijving RFID-RC522.txt = Beschrijving RFID-RC522.txt
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Projector", "Projector\Projector.vcxproj", "{75829D13-727D-4B1F-8592-A59C7AEF970F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Potts", "Potts\Potts.vcxproj", "{42B7AB6C-0152-40AA-86CA-5F0DC20C042A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RFID-RC522", "RFID-RC522\RFID-RC522.vcxproj", "{3655B8B3-EA31-4130-8D64-99D05ED8761B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +36,10 @@ Global
 		{42B7AB6C-0152-40AA-86CA-5F0DC20C042A}.Debug|x86.Build.0 = Debug|Win32
 		{42B7AB6C-0152-40AA-86CA-5F0DC20C042A}.Release|x86.ActiveCfg = Release|Win32
 		{42B7AB6C-0152-40AA-86CA-5F0DC20C042A}.Release|x86.Build.0 = Release|Win32
+		{3655B8B3-EA31-4130-8D64-99D05ED8761B}.Debug|x86.ActiveCfg = Debug|Win32
+		{3655B8B3-EA31-4130-8D64-99D05ED8761B}.Debug|x86.Build.0 = Debug|Win32
+		{3655B8B3-EA31-4130-8D64-99D05ED8761B}.Release|x86.ActiveCfg = Release|Win32
+		{3655B8B3-EA31-4130-8D64-99D05ED8761B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
