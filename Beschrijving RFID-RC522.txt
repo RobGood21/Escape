@@ -1,0 +1,13 @@
+OP zoek naar een nieuwe toepassing? Bekijk alle examples in deze library, verrassend goed.
+
+Aansluitingen SPI
+3,3V >> 3,3V
+RST >> gedefinieerde reset PIN default meestal 9
+GND >> GND
+RQ >>
+MISO >> PIN12 (ICSP1)
+MOSI >> PIN11 (ICSPI4)
+SCK >> PIN13 (ICSPI3)
+SDA >> SS gedefninieerd voor deze reader default meestal PIN10  (Slave Select)
+
+Merkop plaats de readers niet te dicht op elkaar.
