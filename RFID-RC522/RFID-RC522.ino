@@ -5,7 +5,7 @@
  Basis gebruik van RFID card alleen als toegang, identificatie. Storage op de card en verdere trucken niet bekeken.
  Gebruikt MFRC522 library BY COOQROBOT
 
- Diverse testen mee te doen, bv. meerdere kaarten lezen
+RFID reader voor twee readers
 
 */
 
